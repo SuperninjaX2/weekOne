@@ -24,6 +24,4 @@ func main() {
 	routes.SetupRoutes(app)
 	log.Fatal(app.Listen(":3000"))
 }
-func test(){
-	1+1
-}
+
