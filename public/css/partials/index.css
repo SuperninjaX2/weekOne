@@ -1,0 +1,11 @@
+.new-product {
+  padding-top: 1em;
+  height: auto;
+}
+.product-card-container{
+  width: 100vw;
+  height: 50vh;
+  display: flex;
+  flex-direction: row;
+  
+}

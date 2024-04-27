@@ -1,124 +1,109 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
-	"io"
-	"os"
-	"path/filepath"
-	"strings"
+    "bufio"
+    "fmt"
+    "io"
+    "os"
+    "path/filepath"
+    "strings"
 )
 
 func main() {
-	// Prompt user for choice
-	fmt.Println("Do you want to copy from outside to inside or inside to outside? (Type 'out' or 'in'):")
-	reader := bufio.NewReader(os.Stdin)
-	choice, _ := reader.ReadString('\n')
-	choice = strings.TrimSpace(choice)
+    // Prompt user for choice
+    fmt.Println("Do you want to sync from outside to inside or inside to outside? (Type 'out' or 'in'):")
+    reader := bufio.NewReader(os.Stdin)
+    choice, _ := reader.ReadString('\n')
+    choice = strings.TrimSpace(choice)
 
-	switch choice {
-	case "out":
-		copyFromOutside()
-	case "in":
-		copyFromInside()
-	default:
-		fmt.Println("Invalid choice. Please type 'out' or 'in'.")
-	}
+    // Source directory
+    var srcDir, destDir string
+    if choice == "out" {
+        srcDir = "/storage/code/weekOne"
+        destDir = "/storage/internal/weekOne"
+    } else if choice == "in" {
+        srcDir = "/storage/internal/weekOne"
+        destDir = "/storage/code/weekOne"
+    } else {
+        fmt.Println("Invalid choice. Please type 'out' or 'in'.")
+        return
+    }
+
+    // Sync directories
+    err := syncDirs(srcDir, destDir)
+    if err != nil {
+        fmt.Printf("Error syncing directories: %v\n", err)
+        return
+    }
+
+    fmt.Println("Directories synchronized successfully!")
 }
 
-func copyFromOutside() {
-	// Source directory
-	srcDir := "/storage/code/weekOne"
+// Function to sync directories
+func syncDirs(src, dest string) error {
+    // Create destination directory if it does not exist
+    err := os.MkdirAll(dest, os.ModePerm)
+    if err != nil {
+        return err
+    }
 
-	// Destination directory
-	destDir := "/storage/internal/weekOne"
+    // Get the content of the source directory
+    entries, err := os.ReadDir(src)
+    if err != nil {
+        return err
+    }
 
-	// Call the copy function
-	err := copyDir(srcDir, destDir)
-	if err != nil {
-		fmt.Printf("Error copying directory: %v\n", err)
-		return
-	}
+    for _, entry := range entries {
+        srcPath := filepath.Join(src, entry.Name())
+        destPath := filepath.Join(dest, entry.Name())
 
-	fmt.Println("Directory copied from outside to inside successfully!")
+        if entry.IsDir() {
+            // If the entry is a directory, recursively sync it
+            err := syncDirs(srcPath, destPath)
+            if err != nil {
+                return err
+            }
+        } else {
+            // If the entry is a file, sync it
+            err := syncFile(srcPath, destPath)
+            if err != nil {
+                return err
+            }
+        }
+    }
+
+    return nil
 }
 
-func copyFromInside() {
-	// Source directory
-	srcDir := "/storage/internal/weekOne"
+// Function to sync a file
+func syncFile(src, dest string) error {
+    srcFile, err := os.Open(src)
+    if err != nil {
+        return err
+    }
+    defer srcFile.Close()
 
-	// Destination directory
-	destDir := "/storage/code/weekOne"
+    destFile, err := os.Create(dest)
+    if err != nil {
+        return err
+    }
+    defer destFile.Close()
 
-	// Call the copy function
-	err := copyDir(srcDir, destDir)
-	if err != nil {
-		fmt.Printf("Error copying directory: %v\n", err)
-		return
-	}
+    // Copy the content of the source file to the destination file
+    _, err = io.Copy(destFile, srcFile)
+    if err != nil {
+        return err
+    }
 
-	fmt.Println("Directory copied from inside to outside successfully!")
-}
+    // Update the modification time of the destination file to match the source file
+    fileInfo, err := os.Stat(src)
+    if err != nil {
+        return err
+    }
+    err = os.Chtimes(dest, fileInfo.ModTime(), fileInfo.ModTime())
+    if err != nil {
+        return err
+    }
 
-// Function to recursively copy a directory
-func copyDir(src, dest string) error {
-	// Create destination directory if it does not exist
-	err := os.MkdirAll(dest, os.ModePerm)
-	if err != nil {
-		return err
-	}
-
-	// Get the content of the source directory
-	entries, err := os.ReadDir(src)
-	if err != nil {
-		return err
-	}
-
-	for _, entry := range entries {
-		// Ignore .git directory
-		if entry.IsDir() && entry.Name() == ".git" {
-			continue
-		}
-
-		srcPath := filepath.Join(src, entry.Name())
-		destPath := filepath.Join(dest, entry.Name())
-
-		if entry.IsDir() {
-			// If the entry is a directory, recursively copy it
-			err := copyDir(srcPath, destPath)
-			if err != nil {
-				return err
-			}
-		} else {
-			// If the entry is a file, copy it
-			err := copyFile(srcPath, destPath)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-// Function to copy a file
-func copyFile(src, dest string) error {
-	srcFile, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer srcFile.Close()
-
-	destFile, err := os.Create(dest)
-	if err != nil {
-		return err
-	}
-	defer destFile.Close()
-
-	_, err = io.Copy(destFile, srcFile)
-	if err != nil {
-		return err
-	}
-
-	return nil
+    return nil
 }

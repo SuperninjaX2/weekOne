@@ -1,0 +1,13 @@
+{{ template "partials/header" }}
+
+<section class="new-products"
+  hx-trigger="load"
+  hx-get="/partials/product"
+  hx-target="#product-card-container"
+  hx-swap="innerHTML"
+  >
+  <h2 class="">New Products</h2>
+  <div id="product-card-container" class="product-card-container"
+    >
+  </div>
+</section>

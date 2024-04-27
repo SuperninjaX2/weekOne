@@ -1,0 +1,14 @@
+@font-face{
+  font-family:Quicksand;
+  src:url("layouts/Quicksand.ttf")
+}
+.light-theme{
+  --accent:#E65C4F;
+  --primary:#E9EEF2;
+  --background:#ffffff;
+  --secondary:#326789;
+  --tertialy:#78A6C8;
+  --light:#ffffff;
+  --dark:#000000;
+  font-family: Quicksand;
+}

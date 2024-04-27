@@ -1,0 +1,28 @@
+
+:root,*,body{
+  margin: 0;
+  padding: 0;
+}
+body{
+  font-family: Quicksand;
+  background-color: var(--background);
+}
+h1,h2,h3,h4,h5,h6{
+  padding: .2em;
+  font-weight: 400;
+}
+p{
+  font-weight: 300;
+}
+button{
+  border:none;
+  border-radius:8pt;
+  background-color: var(--accent);
+  color: var(--light);
+  transition: background-color .2s ;
+}
+button::hover{
+background-color: var(--primary);
+color: var(--dark);
+}
+
